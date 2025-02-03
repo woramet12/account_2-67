@@ -1,4 +1,4 @@
-import 'package:account/model/transaction.dart';
+import 'package:account/model/transactionItem.dart';
 import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
 import 'formScreen.dart';
@@ -63,14 +63,14 @@ class _MyHomePageState extends State<MyHomePage> {
             return ListView.builder(
                 itemCount: provider.transactions.length,
                 itemBuilder: (context, int index) {
-                  Transaction data = provider.transactions[index];
+                  TransactionItem data = provider.transactions[index];
                   return Card(
                     elevation: 3,
                     margin:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     child: ListTile(
                       title: Text(data.title),
-                      subtitle: Text('วันที่บันทึกข้อมูล'),
+                      subtitle: Text('วันที่บันทึกข้อมูล: ${data.date?.toIso8601String()}', style: TextStyle(fontSize: 10),),
                       leading: CircleAvatar(
                         child: FittedBox(
                           child: Text(data.amount.toString()),

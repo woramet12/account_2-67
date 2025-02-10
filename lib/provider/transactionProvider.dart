@@ -1,22 +1,44 @@
 import 'package:account/model/transactionItem.dart';
 import 'package:flutter/foundation.dart';
+import 'package:account/database/transactionDB.dart';
 
 class TransactionProvider with ChangeNotifier{
-  List<TransactionItem> transactions = [
-    TransactionItem(title: 'หนังสือ', amount: 1000, date: DateTime.now()),
-    TransactionItem(title: 'เสื้อยืด', amount: 200),
-    TransactionItem(title: 'รองเท้า', amount: 1500),
-    TransactionItem(title: 'กระเป๋า', amount: 1000, date: DateTime.now()),
-    TransactionItem(title: 'KFC', amount: 300),
-    TransactionItem(title: 'McDonald', amount: 200),
-  ];
+
+  List<TransactionItem> transactions = [];
+
 
   List<TransactionItem> getTransaction() {
     return transactions;
   }
 
-  void addTransaction(TransactionItem transaction) {
-    transactions.add(transaction);
+  void initData() async{
+    var db = TransactionDB(dbName: 'transactions.db');
+    transactions = await db.loadAllData();
+    notifyListeners();
+  }
+
+  void addTransaction(TransactionItem transaction) async {
+    var db = TransactionDB(dbName: 'transactions.db');
+    
+    await db.insertDatabase(transaction);
+    transactions = await db.loadAllData();
+    notifyListeners();
+  }
+
+  deleteTransaction(TransactionItem transaction) async{
+    var db = TransactionDB(dbName: 'transactions.db');
+    // delete from database
+    await db.deleteData(transaction);
+    transactions = await db.loadAllData();
+    notifyListeners();
+  }
+
+  void updateTransaction(TransactionItem transaction) async{
+    var db = TransactionDB(dbName: 'transactions.db');
+    // update database
+    await db.updateData(transaction);
+    transactions = await db.loadAllData();
+    notifyListeners();
   }
 
 }

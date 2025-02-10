@@ -3,24 +3,28 @@ import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class FormScreen extends StatefulWidget {
-  const FormScreen({super.key});
+class EditScreen extends StatefulWidget {
+  TransactionItem item;
+  
+  EditScreen({super.key, required this.item});
 
   @override
-  State<FormScreen> createState() => _FormScreenState();
+  State<EditScreen> createState() => _EditScreenState();
 }
 
-class _FormScreenState extends State<FormScreen> {
+class _EditScreenState extends State<EditScreen> {
   final formKey = GlobalKey<FormState>();
   final titleController = TextEditingController();
   final amountController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    titleController.text = widget.item.title;
+    amountController.text = widget.item.amount.toString();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Input'),
+        title: const Text('Edit'),
       ),
       body: Form(
         key: formKey,
@@ -62,17 +66,19 @@ class _FormScreenState extends State<FormScreen> {
                   var provider = Provider.of<TransactionProvider>(context, listen: false);
                   
                   TransactionItem item = TransactionItem(
+                    keyID: widget.item.keyID,
                     title: titleController.text,
                     amount: double.parse(amountController.text),
-                    date: DateTime.now()
+                    date: widget.item.date
                   );
 
-                  provider.addTransaction(item);
+                  provider.updateTransaction(item);
+
                   // ปิดหน้าจอ
                   Navigator.pop(context);
                 }
               },
-              child: const Text('เพิ่มข้อมูล'),
+              child: const Text('แก้ไขข้อมูล'),
             ),
         ],),
       ),

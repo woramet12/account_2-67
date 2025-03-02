@@ -1,11 +1,11 @@
-import 'package:account/model/transactionItem.dart';
-import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:account/model/scienceCompetitionItem.dart';
 import 'package:provider/provider.dart';
+import 'package:account/provider/scienceCompetitionProvider.dart';
 
 class EditScreen extends StatefulWidget {
-  TransactionItem item;
-  
+  final ScienceCompetitionItem item;
+
   EditScreen({super.key, required this.item});
 
   @override
@@ -15,72 +15,146 @@ class EditScreen extends StatefulWidget {
 class _EditScreenState extends State<EditScreen> {
   final formKey = GlobalKey<FormState>();
   final titleController = TextEditingController();
-  final amountController = TextEditingController();
+  final scoreController = TextEditingController();
+  TimeOfDay? selectedTime;  // ตัวแปรเก็บเวลาที่เลือก
+  DateTime? selectedDate;  // ตัวแปรเก็บวันที่ที่เลือก
+
+  @override
+  void initState() {
+    super.initState();
+    titleController.text = widget.item.title;
+    scoreController.text = widget.item.score.toString();
+    selectedTime = widget.item.time ?? TimeOfDay.now();  // ใช้เวลาปัจจุบันหากไม่มีเวลา
+    selectedDate = widget.item.date ?? DateTime.now();   // ใช้วันที่ปัจจุบันหากไม่มีวัน
+  }
+
+  // ฟังก์ชันเพื่อเปิด time picker
+  Future<void> _selectTime(BuildContext context) async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  // ฟังก์ชันเพื่อเปิด date picker
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    titleController.text = widget.item.title;
-    amountController.text = widget.item.amount.toString();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Edit'),
+        title: const Text('แก้ไขข้อมูลการแข่งขัน'),
       ),
       body: Form(
         key: formKey,
-        child: Column(
-          children: [
-            TextFormField(
-              decoration: InputDecoration(label: const Text('ชื่อรายการ')),
-              autofocus: true,
-              controller: titleController,
-              validator: (String? value) {
-                if(value!.isEmpty){
-                  print('value: $value');
-                  return "กรุณาป้อนชื่อรายการ";
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              decoration: InputDecoration(label: const Text('จำนวนเงิน')),
-              keyboardType: TextInputType.number,
-              controller: amountController,
-              validator: (String? value) {
-                try{
-                  double amount = double.parse(value!);
-                  if(amount <= 0){
-                    return "กรุณาป้อนจำนวนเงินที่มากกว่า 0";
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'ชื่อการแข่งขัน'),
+                autofocus: true,
+                controller: titleController,
+                validator: (String? value) {
+                  if (value!.isEmpty) {
+                    return "กรุณาป้อนชื่อการแข่งขัน";
                   }
-                  
-                } catch(e){
-                  return "กรุณาป้อนเป็นตัวเลขเท่านั้น";
-                }
-                return null;
-              },
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if(formKey.currentState!.validate()){
-                  // ทำการเพิ่มข้อมูล
-                  var provider = Provider.of<TransactionProvider>(context, listen: false);
-                  
-                  TransactionItem item = TransactionItem(
-                    keyID: widget.item.keyID,
-                    title: titleController.text,
-                    amount: double.parse(amountController.text),
-                    date: widget.item.date
-                  );
+                  return null;
+                },
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'คะแนน'),
+                keyboardType: TextInputType.number,
+                controller: scoreController,
+                validator: (String? value) {
+                  try {
+                    int score = int.parse(value!);
+                    if (score <= 0) {
+                      return "กรุณาป้อนคะแนนที่มากกว่า 0";
+                    }
+                  } catch (e) {
+                    return "กรุณาป้อนเป็นตัวเลขเท่านั้น";
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
 
-                  provider.updateTransaction(item);
+              // ปุ่มเลือกวันที่
+              Row(
+                children: [
+                  Text(
+                    'วันที่: ${selectedDate != null ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}" : 'ไม่ระบุวันที่'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context),
+                  ),
+                ],
+              ),
 
-                  // ปิดหน้าจอ
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('แก้ไขข้อมูล'),
-            ),
-        ],),
+              // ปุ่มเลือกเวลา
+              Row(
+                children: [
+                  Text(
+                    'เวลา: ${selectedTime != null ? selectedTime!.format(context) : 'ไม่ระบุเวลา'}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.access_time),
+                    onPressed: () => _selectTime(context),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // ปุ่มบันทึก
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      // ใช้ addPostFrameCallback เพื่อทำการอัปเดตข้อมูลหลังจากการสร้าง widget เสร็จ
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        var provider = Provider.of<ScienceCompetitionProvider>(context, listen: false);
+                        ScienceCompetitionItem updatedItem = ScienceCompetitionItem(
+                          keyID: widget.item.keyID,
+                          title: titleController.text,
+                          date: selectedDate, // อัปเดตวันที่ใหม่
+                          time: selectedTime, // อัปเดตเวลาใหม่
+                          score: int.parse(scoreController.text),
+                        );
+                        provider.updateCompetition(updatedItem);
+                        Navigator.pop(context);
+                      });
+                    }
+                  },
+                  child: const Text('ยืนยัน'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

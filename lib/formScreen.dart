@@ -1,7 +1,7 @@
-import 'package:account/model/transactionItem.dart';
-import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:account/model/scienceCompetitionItem.dart';
 import 'package:provider/provider.dart';
+import 'package:account/provider/scienceCompetitionProvider.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -11,70 +11,92 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreenState extends State<FormScreen> {
-  final formKey = GlobalKey<FormState>();
-  final titleController = TextEditingController();
-  final amountController = TextEditingController();
+  final _titleController = TextEditingController();
+  DateTime? _date;
+  TimeOfDay? _time;
+  final _scoreController = TextEditingController();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (selectedDate != null && selectedDate != _date) {
+      setState(() {
+        _date = selectedDate;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (selectedTime != null && selectedTime != _time) {
+      setState(() {
+        _time = selectedTime;
+      });
+    }
+  }
+
+  void _submitForm() {
+    if (_titleController.text.isEmpty || _scoreController.text.isEmpty || _date == null || _time == null) {
+      return; // ฟอร์มยังไม่ครบกรอก
+    }
+
+    final newCompetition = ScienceCompetitionItem(
+      keyID: DateTime.now().millisecondsSinceEpoch,
+      title: _titleController.text,
+      date: _date,
+      time: _time,
+      score: int.parse(_scoreController.text),
+    );
+
+    Provider.of<ScienceCompetitionProvider>(context, listen: false).addCompetition(newCompetition);
+
+    Navigator.of(context).pop(); // กลับไปหน้าหลัก
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Input'),
+        title: const Text('สร้างการแข่งขัน'),
       ),
-      body: Form(
-        key: formKey,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextFormField(
-              decoration: InputDecoration(label: const Text('ชื่อรายการ')),
-              autofocus: true,
-              controller: titleController,
-              validator: (String? value) {
-                if(value!.isEmpty){
-                  print('value: $value');
-                  return "กรุณาป้อนชื่อรายการ";
-                }
-                return null;
-              },
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'ชื่อการแข่งขัน'),
             ),
-            TextFormField(
-              decoration: InputDecoration(label: const Text('จำนวนเงิน')),
+            TextField(
+              controller: _scoreController,
+              decoration: const InputDecoration(labelText: 'คะแนน'),
               keyboardType: TextInputType.number,
-              controller: amountController,
-              validator: (String? value) {
-                try{
-                  double amount = double.parse(value!);
-                  if(amount <= 0){
-                    return "กรุณาป้อนจำนวนเงินที่มากกว่า 0";
-                  }
-                  
-                } catch(e){
-                  return "กรุณาป้อนเป็นตัวเลขเท่านั้น";
-                }
-                return null;
-              },
+            ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () => _selectDate(context),
+                  child: Text(_date == null ? 'เลือกวันที่' : 'วันที่: ${_date!.toLocal()}'),
+                ),
+                TextButton(
+                  onPressed: () => _selectTime(context),
+                  child: Text(_time == null ? 'เลือกเวลา' : 'เวลา: ${_time!.format(context)}'),
+                ),
+              ],
             ),
             ElevatedButton(
-              onPressed: () {
-                if(formKey.currentState!.validate()){
-                  // ทำการเพิ่มข้อมูล
-                  var provider = Provider.of<TransactionProvider>(context, listen: false);
-                  
-                  TransactionItem item = TransactionItem(
-                    title: titleController.text,
-                    amount: double.parse(amountController.text),
-                    date: DateTime.now()
-                  );
-
-                  provider.addTransaction(item);
-                  // ปิดหน้าจอ
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('เพิ่มข้อมูล'),
+              onPressed: _submitForm,
+              child: const Text('บันทึกการแข่งขัน'),
             ),
-        ],),
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ class ScienceCompetitionItem {
   final DateTime? date;   // วันที่ของการแข่งขัน
   final int score;        // คะแนนของการแข่งขัน
   final TimeOfDay? time;  // เวลาแข่งขัน (ใหม่)
+  final String? description; // รายละเอียดเพิ่มเติม
 
   // Constructor
   ScienceCompetitionItem({
@@ -14,6 +15,7 @@ class ScienceCompetitionItem {
     required this.date,
     required this.score,
     this.time,  // เพิ่มเวลาเป็นตัวเลือก
+    this.description, // เพิ่มฟิลด์สำหรับรายละเอียดการแข่งขัน
   });
 
   // แปลง ScienceCompetitionItem เป็น Map สำหรับการเก็บในฐานข้อมูล
@@ -30,6 +32,7 @@ class ScienceCompetitionItem {
       'date': date?.toIso8601String(),
       'score': score,
       'time': dateTimeWithTime?.toIso8601String(), // เก็บเวลาเป็น DateTime
+      'description': description, // เพิ่มฟิลด์สำหรับรายละเอียดการแข่งขัน
     };
   }
 
@@ -46,6 +49,7 @@ class ScienceCompetitionItem {
       date: map['date'] != null ? DateTime.parse(map['date']) : null,
       score: map['score'],
       time: dateTime != null ? TimeOfDay(hour: dateTime.hour, minute: dateTime.minute) : null, // แปลงกลับเป็น TimeOfDay
+      description: map['description'], // เพิ่มฟิลด์สำหรับรายละเอียดการแข่งขัน
     );
   }
 
@@ -56,6 +60,7 @@ class ScienceCompetitionItem {
     DateTime? date,
     int? score,
     TimeOfDay? time,
+    String? description, // เพิ่มฟิลด์สำหรับรายละเอียดการแข่งขัน
   }) {
     return ScienceCompetitionItem(
       keyID: keyID ?? this.keyID,
@@ -63,6 +68,7 @@ class ScienceCompetitionItem {
       date: date ?? this.date,
       score: score ?? this.score,
       time: time ?? this.time,
+      description: description ?? this.description, // เพิ่มฟิลด์สำหรับรายละเอียดการแข่งขัน
     );
   }
 }

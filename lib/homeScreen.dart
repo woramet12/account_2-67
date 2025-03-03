@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:account/model/scienceCompetitionItem.dart';
 import 'package:account/provider/scienceCompetitionProvider.dart';
 import 'package:account/formScreen.dart';
 import 'package:account/editScreen.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // ✅ เพิ่ม FontAwesomeIcons
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -19,35 +21,55 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: _buildAppBar(),
       body: _buildCompetitionList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToFormScreen(context),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  /// ✅ AppBar พร้อมปุ่มเพิ่มข้อมูล
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color.fromARGB(255, 253, 229, 75),
-      title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      backgroundColor: Colors.blueGrey.shade900,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.science, color: Colors.white, size: 26),
+          const SizedBox(width: 8),
+          Text(
+            widget.title,
+            style: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ],
+      ),
+      centerTitle: true,
+      elevation: 8,
+      shadowColor: Colors.black54,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add_circle, size: 32, color: Colors.white),
+          onPressed: () => _navigateToFormScreen(context),
+        ),
+      ],
     );
   }
 
-  /// ✅ ListView แสดงการแข่งขันทั้งหมด
   Widget _buildCompetitionList() {
     return Consumer<ScienceCompetitionProvider>(
       builder: (context, provider, child) {
         if (provider.competitions.isEmpty) {
-          return const Center(
-            child: Text(
-              'ไม่มีการแข่งขัน',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.science_outlined, size: 80, color: Colors.blueGrey),
+                const SizedBox(height: 10),
+                Text(
+                  'ไม่มีการแข่งขันในขณะนี้',
+                  style: GoogleFonts.lato(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                ),
+              ],
             ),
           );
         }
         return ListView.builder(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           itemCount: provider.competitions.length,
           itemBuilder: (context, index) {
             final item = provider.competitions[index];
@@ -58,7 +80,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  /// ✅ Card สำหรับแต่ละการแข่งขัน
   Widget _buildCompetitionCard(BuildContext context, ScienceCompetitionProvider provider, ScienceCompetitionItem item) {
     return Dismissible(
       key: Key(item.keyID.toString()),
@@ -71,20 +92,50 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
       child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: ListTile(
-          title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(
-            'วันที่: ${item.date?.toLocal()} | เวลา: ${item.time?.format(context)}',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          title: Row(
+            children: [
+            Text(
+                item.title,
+                style: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple.shade700),
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '📅 วันที่: ${item.date?.toLocal() ?? 'ไม่ระบุ'}',
+                style: GoogleFonts.roboto(fontSize: 14, color: Colors.grey.shade700),
+              ),
+              Text(
+                '⏰ เวลา: ${item.time?.format(context) ?? 'ไม่ระบุ'}',
+                style: GoogleFonts.roboto(fontSize: 14, color: Colors.grey.shade700),
+              ),
+              if (item.description != null && item.description!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    '📌 ${item.description!}',
+                    style: GoogleFonts.roboto(fontSize: 14, color: Colors.grey.shade600),
+                  ),
+                ),
+            ],
           ),
           leading: CircleAvatar(
-            backgroundColor: const Color.fromARGB(255, 223, 244, 38),
-            child: Text(item.score.toString(), style: const TextStyle(color: Colors.white)),
+            backgroundColor: Colors.amber,
+            radius: 25,
+            child: Text(
+              item.score.toString(),
+              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
+            icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () => _confirmDelete(context, provider, item),
           ),
           onTap: () => _navigateToEditScreen(context, item),
@@ -93,17 +144,18 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  /// ✅ แถบแดงแสดงเมื่อปัดเพื่อลบ
   Widget _buildDismissBackground() {
     return Container(
-      color: Colors.red,
+      decoration: BoxDecoration(
+        color: Colors.redAccent,
+        borderRadius: BorderRadius.circular(15),
+      ),
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: const Icon(Icons.delete, color: Colors.white),
+      child: const Icon(Icons.delete, color: Colors.white, size: 30),
     );
   }
 
-  /// ✅ แสดง Dialog ยืนยันการลบ
   void _confirmDelete(BuildContext context, ScienceCompetitionProvider provider, ScienceCompetitionItem item) {
     showDialog(
       context: context,
@@ -111,10 +163,14 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           title: const Text('ยืนยันการลบ'),
           content: Text('คุณต้องการลบ "${item.title}" หรือไม่?'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           actions: [
-            TextButton(child: const Text('ยกเลิก'), onPressed: () => Navigator.of(context).pop()),
             TextButton(
-              child: const Text('ลบ', style: TextStyle(color: Colors.red)),
+              child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('ลบ', style: TextStyle(color: Colors.redAccent, fontSize: 16)),
               onPressed: () {
                 provider.deleteCompetition(item);
                 Navigator.of(context).pop();
@@ -129,13 +185,21 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  /// ✅ ไปที่หน้าสร้างการแข่งขันใหม่
   void _navigateToFormScreen(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const FormScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FormScreen(),
+      ),
+    );
   }
 
-  /// ✅ ไปที่หน้าแก้ไขการแข่งขัน
   void _navigateToEditScreen(BuildContext context, ScienceCompetitionItem item) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => EditScreen(item: item)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditScreen(item: item),
+      ),
+    );
   }
 }
